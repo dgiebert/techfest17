@@ -63,7 +63,7 @@ extern "C" {
 
 #define VS1053_MODE_SM_STREAM 0x0040
 
-Adafruit_VS1053_FilePlayer player = 
+Adafruit_VS1053_FilePlayer player =
   Adafruit_VS1053_FilePlayer(VS1053_RESET, VS1053_CS, VS1053_DCS, VS1053_DREQ, CARDCS);
 
 uint8_t data_global[4096];
@@ -77,16 +77,16 @@ static void bt_av_hdl_stack_evt(uint16_t event, void *p_param)
             /* set up device name */
             const char *dev_name = "ESP_SPEAKER";
             esp_bt_dev_set_device_name(dev_name);
-    
+
             /* initialize A2DP sink */
             esp_a2d_register_callback(&bt_app_a2d);
             // esp_a2d_register_data_callback(bt_data_cb);
             esp_a2d_sink_init();
-    
+
             /* initialize AVRCP controller */
             esp_avrc_ct_init();
             esp_avrc_ct_register_callback(bt_app_rc_ct_cb);
-    
+
             /* set discoverable and connectable mode, wait to be connected */
             esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
             break;
@@ -97,10 +97,19 @@ static void bt_av_hdl_stack_evt(uint16_t event, void *p_param)
     }
 }
 
+void on_data_read(uint8_t * data, int readbytes)
+{
+  for (int i=0; i<readbytes; i++) {
+    Serial.print(data[i]);
+  }
+  Serial.println("");
+  Serial.println(readbytes);
+}
+
 void bt_app_a2d(esp_a2d_cb_event_t event, esp_a2d_cb_param_t *param)
 {
   if(once){
-    player.playFullFile("/track001.mp3");
+    player.playFullFile("/track001.mp3", &on_data_read);
     once = false;
   }
 }
@@ -120,7 +129,7 @@ void setup() {
       ESP_ERROR_CHECK(nvs_flash_erase());
       ret = nvs_flash_init();
   }
-  
+
   esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
   if (esp_bt_controller_init(&bt_cfg) != ESP_OK) {
       log_e("initialize controller failed\n");
