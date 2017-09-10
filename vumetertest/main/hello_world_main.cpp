@@ -124,6 +124,9 @@ void fillArray() {
     for (int i = 0; i < level_size; i++) {
         l_values[i] = analogRead(left_in);
         r_values[i] = analogRead(right_in);
+
+        l_values[i] = data[di++];
+        r_values[i] = data[di++];
         delay(1);
     }
 }
