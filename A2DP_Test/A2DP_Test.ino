@@ -16,6 +16,9 @@ extern "C" {
 #include "esp_a2dp_api.h"
 #include "esp_avrc_api.h"
 };
+#define VS1053_DATA_SPI_SETTING     SPISettings(8000000, MSBFIRST, SPI_MODE0)
+#define SCI_WRAMADDR 7
+#define SCI_WRAM 6
 
 #define VS1053_RESET   -1     // VS1053 reset pin (not used!)
 // Feather M0 or 32u4
@@ -66,7 +69,7 @@ extern "C" {
 Adafruit_VS1053_FilePlayer player =
   Adafruit_VS1053_FilePlayer(VS1053_RESET, VS1053_CS, VS1053_DCS, VS1053_DREQ, CARDCS);
 
-uint8_t data_global[4096];
+uint8_t data_global[VS1053_DATABUFFERLEN];
 bool once = true;
 uint8_t counter = 0;
 static void bt_av_hdl_stack_evt(uint16_t event, void *p_param)
@@ -79,8 +82,8 @@ static void bt_av_hdl_stack_evt(uint16_t event, void *p_param)
             esp_bt_dev_set_device_name(dev_name);
 
             /* initialize A2DP sink */
-            esp_a2d_register_callback(&bt_app_a2d);
-            // esp_a2d_register_data_callback(bt_data_cb);
+            esp_a2d_register_callback(&bt_app_a2d_cb);
+            esp_a2d_register_data_callback(bt_data_cb);
             esp_a2d_sink_init();
 
             /* initialize AVRCP controller */
@@ -106,8 +109,20 @@ void on_data_read(uint8_t * data, int readbytes)
   Serial.println(readbytes);
 }
 
-void bt_app_a2d(esp_a2d_cb_event_t event, esp_a2d_cb_param_t *param)
-{
+void bt_data_cb(const uint8_t *data, uint32_t len){
+  //for(int i = 0; i < VS1053_DATABUFFERLEN; i + VS1053_DATABUFFERLEN){
+  if(player.readyForData()){
+    for(int i = 0; i < VS1053_DATABUFFERLEN; i++) { Serial.print(data_global[i]); Serial.print(" "); }
+    Serial.println();
+    memcpy(data_global, data, VS1053_DATABUFFERLEN);
+    uint8_t data_test[8] = {0x53, 0xEF, 0x6E, 0x44, 0x00, 0x00, 0x00, 0x00};
+    uint8_t data_test2[8] = { 0x45, 0x78, 0x69, 0x74, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t data_test3[32] = {167, 240, 180, 235, 2, 242, 138, 236, 211, 243, 122, 238, 10, 246, 199, 240, 54, 248, 75, 243, 162, 248, 174, 244, 157, 245, 26, 242, 226, 240, 75, 237};
+    digitalWrite (VS1053_CS, HIGH );
+    digitalWrite(VS1053_DCS, LOW);
+    player.spiwrite(data_global, VS1053_DATABUFFERLEN);
+    digitalWrite(VS1053_DCS, HIGH);
+  }
   if(once){
     player.playFullFile("/track001.mp3", &on_data_read);
     once = false;
@@ -123,7 +138,7 @@ void setup() {
      while (1);
   }
   SD.begin(CARDCS);
-  player.setVolume(10,10);
+  player.setVolume(0,0);
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES) {
       ESP_ERROR_CHECK(nvs_flash_erase());
@@ -150,16 +165,27 @@ void setup() {
       log_e("enable bluedroid failed\n");
       return;
   }
+  while(!player.readyForData()) { delay(100); }
+  
+  // Turn on MP3
+  player.sciWrite(VS1053_REG_WRAMADDR, 0xC017);
+  player.sciWrite(VS1053_REG_WRAM, 3);
+  player.sciWrite(VS1053_REG_WRAMADDR, 0xC019);
+  player.sciWrite(VS1053_REG_WRAM, 0);
+
+  player.softReset();
+  player.sciWrite(VS1053_REG_AUDATA, 44101);
+  player.sciWrite(VS1053_REG_CLOCKF, 6 << 12);
+  
+  player.sciWrite(VS1053_REG_MODE, VS1053_MODE_SM_LINE1 | VS1053_MODE_SM_SDINEW);
 
   /* create application task */
   bt_app_task_start_up();
 
   /* Bluetooth device name, connection mode and profile set up */
   bt_app_work_dispatch(bt_av_hdl_stack_evt, 0, NULL, 0, NULL);
-
-
+  
 }
-
 void loop() {
   // put your main code here, to run repeatedly:
 }
