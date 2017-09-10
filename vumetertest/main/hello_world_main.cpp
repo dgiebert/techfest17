@@ -5,7 +5,6 @@
   #include <avr/power.h>
 #endif
 
-#define RIGHT_PIN   15
 #define LEFT_PIN   	21
 #define NUMPIXELS      80
 
@@ -104,8 +103,8 @@ void displayLevels() {
 	  for (; r < level_size; r++) digitalWrite(right_leds[r], LOW);
 	*/
 
-  	uint32_t lColor = left_strip.Color(0,150,0);
-	uint32_t rColor = left_strip.Color(150,0,0);
+  	uint32_t lColor = left_strip.Color(0,0,120);
+	uint32_t rColor = left_strip.Color(120,0,0);
 
 
 	for (; l < level_size; l++) {
@@ -144,7 +143,6 @@ void setup() {
   pinMode(rled1, OUTPUT);
   pinMode(rled2, OUTPUT);
   pinMode(LEFT_PIN, OUTPUT);
-  pinMode(RIGHT_PIN, OUTPUT);
   pinMode(rled3, OUTPUT);
 
   pinMode(left_in, INPUT);
