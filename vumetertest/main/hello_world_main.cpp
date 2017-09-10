@@ -1,5 +1,18 @@
 #include "Arduino.h"
 
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+  #include <avr/power.h>
+#endif
+
+#define NEOPIXEL_PIN   14
+#define NUMPIXELS      40
+
+// When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
+// Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
+// example for more information on possible values.
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+
 /*
 Bottom row:
 A0 - this is an analog input A0 and also an analog output DAC2. It can also be used
@@ -33,7 +46,7 @@ int right_in = 25;
 int sound;
 
 const int level_size = 4;
-int left_leds[level_size] = {14, 4, 21, 12};
+int left_leds[level_size] = {12, 4, 21, 12};
 int right_leds[level_size] = {32, 15, 33, 27};
 int lled0 = 14;
 int lled1 = 32;
@@ -118,6 +131,8 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println("INIT");
+  pixels.begin(); // This initializes the NeoPixel library.
+
 }
 
 void fillArray() {
@@ -130,9 +145,24 @@ void fillArray() {
         delay(1);
     }
 }
+
+void testLED() {
+	for(int i=0;i<NUMPIXELS;i++){
+
+	    // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
+	    pixels.setPixelColor(i, pixels.Color(0,150,0)); // Moderately bright green color.
+
+	    pixels.show(); // This sends the updated pixel color to the hardware.
+	    Serial.println("PIXELS");
+
+	    delay(500); // Delay for a period of time (in milliseconds).
+  	}
+}
  
 void loop() {
   delay(1);
+
+  testLED();
 
   fillArray();
   computeLevels();
