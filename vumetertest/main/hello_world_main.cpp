@@ -5,15 +5,14 @@
   #include <avr/power.h>
 #endif
 
-#define RIGHT_PIN   36
+#define RIGHT_PIN   15
 #define LEFT_PIN   	21
-#define NUMPIXELS      40
+#define NUMPIXELS      80
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
 Adafruit_NeoPixel left_strip = Adafruit_NeoPixel(NUMPIXELS, LEFT_PIN, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel right_strip = Adafruit_NeoPixel(NUMPIXELS, RIGHT_PIN, NEO_GRB + NEO_KHZ800);
 
 /*
 Bottom row:
@@ -106,25 +105,26 @@ void displayLevels() {
 	*/
 
   	uint32_t lColor = left_strip.Color(0,150,0);
-	uint32_t rColor = right_strip.Color(150,0,0);
+	uint32_t rColor = left_strip.Color(150,0,0);
 
 
 	for (; l < level_size; l++) {
 		if (l > l_level) {
-			for (int i = 0; i < 5; i+=8) left_strip.setPixelColor(l+i, pixels.Color(0,0,0));
+			for (int i = 0; i < 5*8; i+=8) left_strip.setPixelColor(l+i, left_strip.Color(0,0,0));
 		} else {
-			for (int i = 0; i < 5; i+=8) left_strip.setPixelColor(l+i, lColor);
+			for (int i = 0; i < 5*8; i+=8) left_strip.setPixelColor(l+i, lColor);
 		}
 	}
 
 	for (; r < level_size; r++) {
 		if (r > r_level) {
-			for (int i = 0; i < 5; i+=8) right_strip.setPixelColor(l+i, pixels.Color(0,0,0));
+			for (int i = 0; i < 5*8; i+=8) left_strip.setPixelColor(r+i+40, left_strip.Color(0,0,0));
 		} else {
-			for (int i = 0; i < 5; i+=8) right_strip.setPixelColor(l+i, rColor);
+			for (int i = 0; i < 5*8; i+=8) left_strip.setPixelColor(r+i+40, rColor);
 		}
 	}
-	pixels.show(); // This sends the updated pixel color to the hardware.
+	//right_strip.show(); // This sends the updated pixel color to the hardware.
+	left_strip.show();
 }
 
 void updatemax() {
@@ -143,7 +143,8 @@ void setup() {
   pinMode(rled0, OUTPUT);
   pinMode(rled1, OUTPUT);
   pinMode(rled2, OUTPUT);
-  pinMode(NEOPIXEL_PIN, OUTPUT);
+  pinMode(LEFT_PIN, OUTPUT);
+  pinMode(RIGHT_PIN, OUTPUT);
   pinMode(rled3, OUTPUT);
 
   pinMode(left_in, INPUT);
@@ -151,7 +152,8 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println("INIT");
-  pixels.begin(); // This initializes the NeoPixel library.
+  //right_strip.begin(); // This initializes the NeoPixel library.
+  left_strip.begin();
 
 }
 
