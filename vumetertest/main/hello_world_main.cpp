@@ -5,13 +5,15 @@
   #include <avr/power.h>
 #endif
 
-#define NEOPIXEL_PIN   14
+#define RIGHT_PIN   36
+#define LEFT_PIN   	21
 #define NUMPIXELS      40
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel left_strip = Adafruit_NeoPixel(NUMPIXELS, LEFT_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel right_strip = Adafruit_NeoPixel(NUMPIXELS, RIGHT_PIN, NEO_GRB + NEO_KHZ800);
 
 /*
 Bottom row:
@@ -103,27 +105,23 @@ void displayLevels() {
 	  for (; r < level_size; r++) digitalWrite(right_leds[r], LOW);
 	*/
 
-  	uint32_t lColor = pixels.Color(0,150,0);
-	uint32_t rColor = pixels.Color(150,0,0);
+  	uint32_t lColor = left_strip.Color(0,150,0);
+	uint32_t rColor = right_strip.Color(150,0,0);
 
 
 	for (; l < level_size; l++) {
 		if (l > l_level) {
-			pixels.setPixelColor(l, pixels.Color(0,0,0));
-			pixels.setPixelColor(l+8, pixels.Color(0,0,0));
+			for (int i = 0; i < 5; i+=8) left_strip.setPixelColor(l+i, pixels.Color(0,0,0));
 		} else {
-			pixels.setPixelColor(l, lColor);
-			pixels.setPixelColor(l+8, lColor); // Moderately bright green color.
+			for (int i = 0; i < 5; i+=8) left_strip.setPixelColor(l+i, lColor);
 		}
 	}
 
 	for (; r < level_size; r++) {
 		if (r > r_level) {
-			pixels.setPixelColor(r+8+8+8+8, pixels.Color(0,0,0));
-			pixels.setPixelColor(r+8+8+8, pixels.Color(0,0,0));
+			for (int i = 0; i < 5; i+=8) right_strip.setPixelColor(l+i, pixels.Color(0,0,0));
 		} else {
-			pixels.setPixelColor(r+8+8+8+8, rColor);
-			pixels.setPixelColor(r+8+8+8, rColor);
+			for (int i = 0; i < 5; i+=8) right_strip.setPixelColor(l+i, rColor);
 		}
 	}
 	pixels.show(); // This sends the updated pixel color to the hardware.
@@ -165,18 +163,6 @@ void fillArray() {
     }
 }
 
-void testLED() {
-	for(int i=0;i<NUMPIXELS;i++){
-
-	    // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
-	    pixels.setPixelColor(i, pixels.Color(0,150,0)); // Moderately bright green color.
-
-	    pixels.show(); // This sends the updated pixel color to the hardware.
-
-	    delay(500); // Delay for a period of time (in milliseconds).
-  	}
-}
- 
 void loop() {
   delay(10);
 
